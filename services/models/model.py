@@ -14,14 +14,15 @@ load_dotenv()
 # import logging
 # logging.basicConfig(level=logging.DEBUG)
 
-model_name = "deepseek/deepseek-v3.2"
+# model_name = "deepseek/deepseek-v3.2"
 # model_name = "google/gemini-3-flash-preview"
+model_name = "google/gemini-2.5-flash"
 model = OpenRouterModel(
     model_name,
     provider="openrouter",
     settings=ModelSettings(extra_body={
         "reasoning": {"enabled": False},
-        "provider": {"only": ["deepseek"]},
+        # "provider": {"only": ["deepseek"]},
     })
 )
 
