@@ -14,9 +14,9 @@ load_dotenv()
 # import logging
 # logging.basicConfig(level=logging.DEBUG)
 
-# model_name = "deepseek/deepseek-v3.2"
+model_name = "deepseek/deepseek-v3.2"
 # model_name = "google/gemini-3-flash-preview"
-model_name = "google/gemini-2.5-flash"
+# model_name = "google/gemini-2.5-flash"
 model = OpenRouterModel(
     model_name,
     provider="openrouter",
@@ -40,7 +40,6 @@ async def get_system_prompt(ctx: RunContext[None]) -> str:
 
 normal_agent = Agent[None, str](model)
 normal_agent.system_prompt(dynamic=True)(get_system_prompt)
-
 
 async def stream_chat_response(messages: list, player: str):
     try:
@@ -78,7 +77,6 @@ async def stream_chat_response(messages: list, player: str):
 
             elif isinstance(event, AgentRunResultEvent):
                 usage = event.result.usage()
-                print(ModelMessagesTypeAdapter.dump_json(event.result.all_messages(), indent=4).decode('utf-8'))
                 yield json.dumps({
                     "usage": {
                         "input_tokens": usage.input_tokens,
@@ -88,6 +86,7 @@ async def stream_chat_response(messages: list, player: str):
                     }
                 })
                 # print(event.event_kind, event.result.usage().__dict__)
+                # print(ModelMessagesTypeAdapter.dump_json(event.result.all_messages(), indent=4).decode('utf-8'))
     except Exception as e:
         traceback.print_exc()
         yield json.dumps({"error": {"type": e.__class__.__name__, "message": str(e)}})
