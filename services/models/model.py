@@ -31,7 +31,6 @@ async def get_system_prompt(ctx: RunContext[None]) -> str:
     return prompts.get_prompt(ctx.deps["player"])
 
 normal_agent = Agent[None, str](model)
-# normal_agent.system_prompt(get_system_prompt)
 
 async def stream_chat_response(messages: list, player: str):
     try:
