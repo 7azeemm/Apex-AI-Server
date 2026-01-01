@@ -3,10 +3,9 @@ import traceback
 
 from dotenv import load_dotenv
 from pydantic_ai import Agent, ModelSettings, TextPart, AgentRunResultEvent, PartStartEvent, PartDeltaEvent, \
-    TextPartDelta, ModelMessagesTypeAdapter, RunContext, ModelRequest, SystemPromptPart
+    TextPartDelta
 from pydantic_ai.models.openrouter import OpenRouterModel
 
-from services import prompts
 from utils.utils import parse_history, count_tokens
 
 load_dotenv()
@@ -26,9 +25,6 @@ model = OpenRouterModel(
         # "provider": {"order": ["google-vertex", "google-ai-studio"]}
     })
 )
-
-async def get_system_prompt(ctx: RunContext[None]) -> str:
-    return prompts.get_prompt(ctx.deps["player"])
 
 normal_agent = Agent[None, str](model)
 
@@ -67,7 +63,6 @@ async def stream_chat_response(messages: list, player: str):
 
             elif isinstance(event, AgentRunResultEvent):
                 usage = event.result.usage()
-                print(ModelMessagesTypeAdapter.dump_json(event.result.all_messages(), indent=4).decode('utf-8'))
                 yield json.dumps({
                     "usage": {
                         "input_tokens": usage.input_tokens,
