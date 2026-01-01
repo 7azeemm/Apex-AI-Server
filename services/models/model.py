@@ -23,7 +23,7 @@ model = OpenRouterModel(
     settings=ModelSettings(extra_body={
         "reasoning": {"enabled": False},
         # "provider": {"only": ["deepseek"]},
-        "provider": {"order": ["google-ai-studio", "google-vertex"]}
+        "provider": {"order": ["google-vertex", "google-ai-studio"]}
     })
 )
 
