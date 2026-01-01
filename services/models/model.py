@@ -37,7 +37,7 @@ async def get_system_prompt(ctx: RunContext[None]) -> str:
 
 normal_agent = Agent[None, str](
     model,
-    # system_prompt=prompts.NORMAL_PROMPT
+    system_prompt=prompts.NORMAL_PROMPT
 )
 
 async def stream_chat_response(messages: list, player: str):
@@ -57,8 +57,6 @@ async def stream_chat_response(messages: list, player: str):
         #     f"The current date is {datetime.now().strftime('%Y-%m-%d')}",
         #     f"You are talking to the player **{player}**."
         # ]
-
-        history.insert(0, ModelRequest[SystemPromptPart("You are apex")])
 
         async for event in agent.run_stream_events(user_message, message_history=history, deps= {"player": player}):
             if isinstance(event, PartStartEvent):
