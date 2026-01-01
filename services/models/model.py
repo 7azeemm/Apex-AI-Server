@@ -23,7 +23,7 @@ model = OpenRouterModel(
     provider="openrouter",
     settings=ModelSettings(extra_body={
         "reasoning": {"enabled": False},
-        # "provider": {"only": ["deepseek"]},
+        "provider": {"only": ["deepseek"]},
     })
 )
 
