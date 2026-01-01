@@ -78,6 +78,7 @@ async def stream_chat_response(messages: list, player: str):
 
             elif isinstance(event, AgentRunResultEvent):
                 usage = event.result.usage()
+                print(ModelMessagesTypeAdapter.dump_json(event.result.all_messages(), indent=4).decode('utf-8'))
                 yield json.dumps({
                     "usage": {
                         "input_tokens": usage.input_tokens,
@@ -87,7 +88,6 @@ async def stream_chat_response(messages: list, player: str):
                     }
                 })
                 # print(event.event_kind, event.result.usage().__dict__)
-                print(ModelMessagesTypeAdapter.dump_json(event.result.all_messages(), indent=4).decode('utf-8'))
     except Exception as e:
         traceback.print_exc()
         yield json.dumps({"error": {"type": e.__class__.__name__, "message": str(e)}})
