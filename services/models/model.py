@@ -1,11 +1,9 @@
 import json
 import traceback
 
-from datetime import datetime
 from dotenv import load_dotenv
-from langchain.agents.middleware import ModelRequest
 from pydantic_ai import Agent, ModelSettings, TextPart, AgentRunResultEvent, PartStartEvent, PartDeltaEvent, \
-    TextPartDelta, ModelMessagesTypeAdapter, RunContext, SystemPromptPart
+    TextPartDelta, ModelMessagesTypeAdapter, RunContext
 from pydantic_ai.models.openrouter import OpenRouterModel
 
 from services import prompts
