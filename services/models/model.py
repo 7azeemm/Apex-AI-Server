@@ -28,22 +28,17 @@ model = OpenRouterModel(
 )
 
 async def get_system_prompt(ctx: RunContext[None]) -> str:
-    print(ctx.deps["player"])
-    prompt = prompts.get_prompt(ctx.deps["player"])
-    print(prompt)
-    return prompt
+    return prompts.get_prompt(ctx.deps["player"])
 
-normal_agent = Agent[None, str](
-    model,
-    # system_prompt=prompts.NORMAL_PROMPT
-)
+normal_agent = Agent[None, str](model)
+normal_agent.system_prompt(get_system_prompt)
 
 async def stream_chat_response(messages: list, player: str):
     try:
         user_message = messages[-1].get("content", "")
         history = parse_incoming_history(messages[:-1])
         agent = normal_agent
-        # agent.system_prompt(get_system_prompt)
+        deps = {"player": player}
 
         # print(json.dumps(messages, indent=4))
         # print(ModelMessagesTypeAdapter.dump_json(history, indent=4).decode('utf-8'))
@@ -51,12 +46,7 @@ async def stream_chat_response(messages: list, player: str):
         # result = await agent.run(user_message, message_history=history)
         # yield json.dumps({"completions": {"content": result.output}})
 
-        # instructions = [
-        #     f"The current date is {datetime.now().strftime('%Y-%m-%d')}",
-        #     f"You are talking to the player **{player}**."
-        # ]
-
-        async for event in agent.run_stream_events(user_message, message_history=history, deps= {"player": player}):
+        async for event in agent.run_stream_events(user_message, message_history=history, deps=deps):
             if isinstance(event, PartStartEvent):
                 part = event.part
                 if isinstance(part, TextPart):
