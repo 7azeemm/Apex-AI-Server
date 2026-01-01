@@ -3,7 +3,7 @@ import traceback
 
 from dotenv import load_dotenv
 from pydantic_ai import Agent, ModelSettings, TextPart, AgentRunResultEvent, PartStartEvent, PartDeltaEvent, \
-    TextPartDelta, ModelMessagesTypeAdapter, RunContext
+    TextPartDelta, ModelMessagesTypeAdapter, RunContext, ModelRequest, SystemPromptPart
 from pydantic_ai.models.openrouter import OpenRouterModel
 
 from services import prompts
@@ -31,7 +31,7 @@ async def get_system_prompt(ctx: RunContext[None]) -> str:
     return prompts.get_prompt(ctx.deps["player"])
 
 normal_agent = Agent[None, str](model)
-normal_agent.system_prompt(get_system_prompt)
+# normal_agent.system_prompt(get_system_prompt)
 
 async def stream_chat_response(messages: list, player: str):
     try:
@@ -39,6 +39,8 @@ async def stream_chat_response(messages: list, player: str):
         history = parse_incoming_history(messages[:-1])
         agent = normal_agent
         deps = {"player": player}
+
+        history.insert(0, ModelRequest[SystemPromptPart("You are Apex")])
 
         # print(json.dumps(messages, indent=4))
         # print(ModelMessagesTypeAdapter.dump_json(history, indent=4).decode('utf-8'))
