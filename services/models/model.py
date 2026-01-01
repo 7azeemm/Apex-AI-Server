@@ -7,7 +7,7 @@ from pydantic_ai import Agent, ModelSettings, TextPart, AgentRunResultEvent, Par
 from pydantic_ai.models.openrouter import OpenRouterModel
 
 from services import prompts
-from utils.utils import parse_incoming_history, count_tokens
+from utils.utils import parse_history, count_tokens
 
 load_dotenv()
 
@@ -36,11 +36,8 @@ normal_agent = Agent[None, str](model)
 async def stream_chat_response(messages: list, player: str):
     try:
         user_message = messages[-1].get("content", "")
-        history = parse_incoming_history(messages[:-1])
+        history = parse_history(messages[:-1], player)
         agent = normal_agent
-        deps = {"player": player}
-
-        history.insert(0, ModelRequest[SystemPromptPart("You are Apex")])
 
         # print(json.dumps(messages, indent=4))
         # print(ModelMessagesTypeAdapter.dump_json(history, indent=4).decode('utf-8'))
@@ -48,7 +45,7 @@ async def stream_chat_response(messages: list, player: str):
         # result = await agent.run(user_message, message_history=history)
         # yield json.dumps({"completions": {"content": result.output}})
 
-        async for event in agent.run_stream_events(user_message, message_history=history, deps=deps):
+        async for event in agent.run_stream_events(user_message, message_history=history):
             if isinstance(event, PartStartEvent):
                 part = event.part
                 if isinstance(part, TextPart):

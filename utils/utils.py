@@ -1,8 +1,10 @@
 from typing import List, Dict, Any
 
 import tiktoken
-from pydantic_ai import ModelRequest, ModelResponse
+from pydantic_ai import ModelRequest, ModelResponse, SystemPromptPart
 from pydantic_ai.messages import UserPromptPart, TextPart, ToolCallPart, ToolReturnPart
+
+from services import prompts
 
 tokenizer = tiktoken.get_encoding("cl100k_base")
 
@@ -49,15 +51,17 @@ def extract_tool_data(messages: List[ModelRequest | ModelResponse]) -> List[Dict
     return complete_tools
 
 
-def parse_incoming_history(rust_messages: list) -> List[ModelRequest | ModelResponse]:
-    pydantic_history = []
+def parse_history(messages: list, username: str) -> List[ModelRequest | ModelResponse]:
+    history = []
 
-    for msg in rust_messages:
+    history.append(ModelRequest(parts=[SystemPromptPart(prompts.get_prompt(username))]))
+
+    for msg in messages:
         role = msg.get("sender")
         content = msg.get("content", "")
 
         if role == "user":
-            pydantic_history.append(ModelRequest(parts=[UserPromptPart(content=content)]))
+            history.append(ModelRequest(parts=[UserPromptPart(content=content)]))
 
         elif role == "assistant":
             tools = msg.get("tools", [])
@@ -82,13 +86,13 @@ def parse_incoming_history(rust_messages: list) -> List[ModelRequest | ModelResp
                     ))
 
                 # Step 1: Add the Assistant's Request to run tools
-                pydantic_history.append(ModelResponse(parts=call_parts))
+                history.append(ModelResponse(parts=call_parts))
 
                 # Step 2: Add the Tool's Result (ModelRequest simulating the system return)
-                pydantic_history.append(ModelRequest(parts=return_parts))
+                history.append(ModelRequest(parts=return_parts))
 
             # Step 3: Finally, add the actual Text the AI spoke
             if content:
-                pydantic_history.append(ModelResponse(parts=[TextPart(content=content)]))
+                history.append(ModelResponse(parts=[TextPart(content=content)]))
 
-    return pydantic_history
+    return history
