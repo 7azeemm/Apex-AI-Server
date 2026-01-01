@@ -3,8 +3,9 @@ import traceback
 
 from datetime import datetime
 from dotenv import load_dotenv
+from langchain.agents.middleware import ModelRequest
 from pydantic_ai import Agent, ModelSettings, TextPart, AgentRunResultEvent, PartStartEvent, PartDeltaEvent, \
-    TextPartDelta, ModelMessagesTypeAdapter, RunContext
+    TextPartDelta, ModelMessagesTypeAdapter, RunContext, SystemPromptPart
 from pydantic_ai.models.openrouter import OpenRouterModel
 
 from services import prompts
@@ -36,7 +37,7 @@ async def get_system_prompt(ctx: RunContext[None]) -> str:
 
 normal_agent = Agent[None, str](
     model,
-    system_prompt=prompts.NORMAL_PROMPT
+    # system_prompt=prompts.NORMAL_PROMPT
 )
 
 async def stream_chat_response(messages: list, player: str):
@@ -44,7 +45,7 @@ async def stream_chat_response(messages: list, player: str):
         user_message = messages[-1].get("content", "")
         history = parse_incoming_history(messages[:-1])
         agent = normal_agent
-        agent.system_prompt(get_system_prompt)
+        # agent.system_prompt(get_system_prompt)
 
         # print(json.dumps(messages, indent=4))
         # print(ModelMessagesTypeAdapter.dump_json(history, indent=4).decode('utf-8'))
@@ -56,6 +57,8 @@ async def stream_chat_response(messages: list, player: str):
         #     f"The current date is {datetime.now().strftime('%Y-%m-%d')}",
         #     f"You are talking to the player **{player}**."
         # ]
+
+        history.insert(0, ModelRequest[SystemPromptPart("You are apex")])
 
         async for event in agent.run_stream_events(user_message, message_history=history, deps= {"player": player}):
             if isinstance(event, PartStartEvent):
