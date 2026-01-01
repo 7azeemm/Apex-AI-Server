@@ -15,15 +15,15 @@ load_dotenv()
 # logging.basicConfig(level=logging.DEBUG)
 
 # model_name = "deepseek/deepseek-v3.2"
-model_name = "google/gemini-3-flash-preview"
-# model_name = "google/gemini-2.5-flash"
+# model_name = "google/gemini-3-flash-preview"
+model_name = "x-ai/grok-4.1-fast"
 model = OpenRouterModel(
     model_name,
     provider="openrouter",
     settings=ModelSettings(extra_body={
         "reasoning": {"enabled": False},
         # "provider": {"only": ["deepseek"]},
-        "provider": {"order": ["google-vertex", "google-ai-studio"]}
+        # "provider": {"order": ["google-vertex", "google-ai-studio"]}
     })
 )
 
