@@ -34,6 +34,7 @@ model = OpenRouterModel(
 # skyblock_agent.system_prompt(dynamic=True)(get_system_prompt)
 
 async def get_system_prompt(ctx: RunContext[None]) -> str:
+    print(ctx.deps["player"])
     prompt = prompts.get_prompt(ctx.deps["player"])
     print(prompt)
     return prompt
