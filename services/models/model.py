@@ -1,9 +1,10 @@
+from datetime import datetime
 import json
 import traceback
 
 from dotenv import load_dotenv
 from pydantic_ai import Agent, ModelSettings, TextPart, AgentRunResultEvent, PartStartEvent, PartDeltaEvent, \
-    TextPartDelta, RunContext, SystemPromptPart
+    TextPartDelta, RunContext, ModelMessagesTypeAdapter
 from pydantic_ai.models.openrouter import OpenRouterModel
 
 from services import prompts
@@ -26,28 +27,23 @@ model = OpenRouterModel(
     })
 )
 
-# skyblock_agent = Agent[None, str](model)
-# Should be after agent init
-# from llm_service import tools, prompts
-# tools.load()
-#
-# skyblock_agent.system_prompt(dynamic=True)(get_system_prompt)
-
 async def get_system_prompt(ctx: RunContext[None]) -> str:
     print(ctx.deps["player"])
     prompt = prompts.get_prompt(ctx.deps["player"])
     print(prompt)
     return prompt
 
-normal_agent = Agent[None, str](model)
-normal_agent.system_prompt(dynamic=True)(get_system_prompt)
+normal_agent = Agent[None, str](
+    model,
+    system_prompt=prompts.NORMAL_PROMPT
+)
+# normal_agent.system_prompt(dynamic=True)(get_system_prompt)
 
 async def stream_chat_response(messages: list, player: str):
     try:
         user_message = messages[-1].get("content", "")
         history = parse_incoming_history(messages[:-1])
         agent = normal_agent
-        deps = {"player": player}
 
         # print(json.dumps(messages, indent=4))
         # print(ModelMessagesTypeAdapter.dump_json(history, indent=4).decode('utf-8'))
@@ -55,7 +51,12 @@ async def stream_chat_response(messages: list, player: str):
         # result = await agent.run(user_message, message_history=history)
         # yield json.dumps({"completions": {"content": result.output}})
 
-        async for event in agent.run_stream_events(user_message, message_history=history, deps=deps):
+        instructions = [
+            f"The current date is {datetime.now().strftime('%Y-%m-%d')}",
+            f"You are talking to the player **{player}**."
+        ]
+
+        async for event in agent.run_stream_events(user_message, message_history=history, instructions=instructions):
             if isinstance(event, PartStartEvent):
                 part = event.part
                 if isinstance(part, TextPart):
@@ -78,6 +79,7 @@ async def stream_chat_response(messages: list, player: str):
 
             elif isinstance(event, AgentRunResultEvent):
                 usage = event.result.usage()
+                print(ModelMessagesTypeAdapter.dump_json(event.result.all_messages(), indent=4).decode('utf-8'))
                 yield json.dumps({
                     "usage": {
                         "input_tokens": usage.input_tokens,
@@ -87,7 +89,6 @@ async def stream_chat_response(messages: list, player: str):
                     }
                 })
                 # print(event.event_kind, event.result.usage().__dict__)
-                # print(ModelMessagesTypeAdapter.dump_json(event.result.all_messages(), indent=4).decode('utf-8'))
     except Exception as e:
         traceback.print_exc()
         yield json.dumps({"error": {"type": e.__class__.__name__, "message": str(e)}})
