@@ -1,10 +1,10 @@
-from datetime import datetime
 import json
 import traceback
 
+from datetime import datetime
 from dotenv import load_dotenv
 from pydantic_ai import Agent, ModelSettings, TextPart, AgentRunResultEvent, PartStartEvent, PartDeltaEvent, \
-    TextPartDelta, RunContext, ModelMessagesTypeAdapter
+    TextPartDelta, ModelMessagesTypeAdapter, RunContext
 from pydantic_ai.models.openrouter import OpenRouterModel
 
 from services import prompts
@@ -15,15 +15,16 @@ load_dotenv()
 # import logging
 # logging.basicConfig(level=logging.DEBUG)
 
-model_name = "deepseek/deepseek-v3.2"
-# model_name = "google/gemini-3-flash-preview"
+# model_name = "deepseek/deepseek-v3.2"
+model_name = "google/gemini-3-flash-preview"
 # model_name = "google/gemini-2.5-flash"
 model = OpenRouterModel(
     model_name,
     provider="openrouter",
     settings=ModelSettings(extra_body={
         "reasoning": {"enabled": False},
-        "provider": {"only": ["deepseek"]},
+        # "provider": {"only": ["deepseek"]},
+        "provider": {"order": ["google-ai-studio", "google-vertex"]}
     })
 )
 
@@ -37,13 +38,13 @@ normal_agent = Agent[None, str](
     model,
     system_prompt=prompts.NORMAL_PROMPT
 )
-# normal_agent.system_prompt(dynamic=True)(get_system_prompt)
 
 async def stream_chat_response(messages: list, player: str):
     try:
         user_message = messages[-1].get("content", "")
         history = parse_incoming_history(messages[:-1])
         agent = normal_agent
+        agent.system_prompt(get_system_prompt)
 
         # print(json.dumps(messages, indent=4))
         # print(ModelMessagesTypeAdapter.dump_json(history, indent=4).decode('utf-8'))
@@ -51,12 +52,12 @@ async def stream_chat_response(messages: list, player: str):
         # result = await agent.run(user_message, message_history=history)
         # yield json.dumps({"completions": {"content": result.output}})
 
-        instructions = [
-            f"The current date is {datetime.now().strftime('%Y-%m-%d')}",
-            f"You are talking to the player **{player}**."
-        ]
+        # instructions = [
+        #     f"The current date is {datetime.now().strftime('%Y-%m-%d')}",
+        #     f"You are talking to the player **{player}**."
+        # ]
 
-        async for event in agent.run_stream_events(user_message, message_history=history, instructions=instructions):
+        async for event in agent.run_stream_events(user_message, message_history=history, deps= {"player": player}):
             if isinstance(event, PartStartEvent):
                 part = event.part
                 if isinstance(part, TextPart):
