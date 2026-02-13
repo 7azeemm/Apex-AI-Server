@@ -44,14 +44,14 @@ async def stream_chat_response(messages: list, player: str):
             if isinstance(event, PartStartEvent):
                 part = event.part
                 if isinstance(part, TextPart):
-                    yield json.dumps({"completions": {"content": part.content}})
+                    yield f"content: {part.content}"
                 # elif isinstance(part, ThinkingPart):
                 #     print(event.event_kind, part.part_kind, part.content)
 
             elif isinstance(event, PartDeltaEvent):
                 delta = event.delta
                 if isinstance(delta, TextPartDelta):
-                    yield json.dumps({"completions": {"content": delta.content_delta}})
+                    yield f"content: {delta.content_delta}"
                 # elif isinstance(delta, ThinkingPartDelta):
                 #     print(event.event_kind, delta.part_delta_kind, delta.content_delta)
 
